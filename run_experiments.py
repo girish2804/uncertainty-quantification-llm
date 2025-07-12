@@ -123,7 +123,15 @@ def load_models(constants: Constants) -> Tuple[Any, Any, Any, Any, str, str]:
         token=auth_token
     )
     
-    return None, llm_tokenizer, deberta_model, deberta_tokenizer, device_llm, device_deberta
+    llm_model = AutoModelForCausalLM.from_pretrained(args.llm_model, torch_dtype=torch.bfloat16, token = auth_token).to(device_llm)
+    
+    tokenizer.add_special_tokens({'pad_token': '[PAD]'})
+    tokenizer.add_special_tokens({'bos_token': '</s>'})
+    tokenizer.add_special_tokens({'eos_token': '</s>'})
+    tokenizer.add_special_tokens({'unk_token': '</s>'})
+    llm_model.resize_token_embeddings(len(tokenizer))
+    
+    return llm_model, llm_tokenizer, deberta_model, deberta_tokenizer, device_llm, device_deberta
 
 
 def initialize_metrics() -> Dict[str, Any]:
@@ -375,7 +383,17 @@ def main():
     
     num_samples = len(science_qa_test)
     processed_dataset = encode_and_format_dataset(science_qa_test, few_shot_prompt, tokenizer)
-    
+
+    get_results(args=args,
+                base_path=base_path, 
+                llm_model=llm_model, 
+                tokenizer=tokenizer, 
+                device_llm=device_llm, 
+                deberta_model=deberta_model, 
+                deberta_tokenizer=deberta_tokenizer, 
+                device_deberta=device_deberta, 
+                dataset=processed_dataset)
+                                 
     # Run semantic analysis
     compute_semantic_paris_new(
         base_path=str(base_path), model_type=args.deberta_model, deberta_tokenizer=deberta_tokenizer,
