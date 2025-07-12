@@ -50,12 +50,10 @@ class Constants:
     DEFAULT_CUDA_DEVICE: int = 0
     TRUTHFUL_QA_FEW_SHOT_START: int = 51
     TRUTHFUL_QA_FEW_SHOT_END: int = 54
-    HF_AUTH_TOKEN: str = 'your_api_token'
     RESULTS_DIR: str = "result"
     CONFIG_FILENAME: str = "config.yaml"
     DEBERTA_MODEL_INDEX: int = 1
     BATCH_SIZE: int = 1
-
 
 def get_device(cuda_id: int = 0) -> str:
     """Determine the appropriate device for model execution."""
@@ -106,6 +104,8 @@ def create_few_shot_prompt(dataset: datasets.Dataset, constants: Constants) -> s
 
 def load_models(constants: Constants) -> Tuple[Any, Any, Any, Any, str, str]:
     """Load all required models and tokenizers."""
+
+    auth_token = os.environ.get('AUTH_TOKEN')
     device_llm = get_device(constants.DEFAULT_CUDA_DEVICE)
     device_deberta = device_llm
     
@@ -120,7 +120,7 @@ def load_models(constants: Constants) -> Tuple[Any, Any, Any, Any, str, str]:
     # Load LLM tokenizer
     llm_tokenizer = AutoTokenizer.from_pretrained(
         ModelType.OPT_13B.value, 
-        token=constants.HF_AUTH_TOKEN
+        token=auth_token
     )
     
     return None, llm_tokenizer, deberta_model, deberta_tokenizer, device_llm, device_deberta
